@@ -98,4 +98,12 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new EntityNotFoundException("Profile not found: " + profileId));
         return profileMapper.toDto(profile);
     }
+    @Override
+    public void verifyProfileOwnership(UUID userId, UUID profileId) {
+        Profile profile = profileRepository.findById(profileId)
+                .orElseThrow(() -> new EntityNotFoundException("Profile not found: " + profileId));
+        if (!profile.getUserId().equals(userId)) {
+            throw new UnauthorizedException("You do not own this profile");
+        }
+    }
 }

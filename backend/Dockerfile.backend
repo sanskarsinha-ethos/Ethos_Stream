@@ -1,0 +1,29 @@
+FROM eclipse-temurin:21-jdk-alpine AS build
+
+WORKDIR /app
+
+# Install maven wrapper dependencies
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+
+# Download dependencies
+RUN ./mvnw dependency:go-offline
+
+# Copy source and build
+COPY src src
+RUN ./mvnw package -DskipTests
+
+# Stage 2: Run
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Install FFmpeg for HLS transcoding
+RUN apk add --no-cache ffmpeg
+
+COPY --from=build /app/target/ethos-stream-0.0.1-SNAPSHOT.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

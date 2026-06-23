@@ -15,6 +15,8 @@ public interface UserService {
 
     ProfileDTO updateProfile(UUID userId, UUID profileId, UpdateProfileRequest request);
 
+    void verifyProfileOwnership(UUID userId, UUID profileId);
+
     void deleteProfile(UUID userId, UUID profileId);
 
     ProfileDTO getProfileById(UUID profileId);
