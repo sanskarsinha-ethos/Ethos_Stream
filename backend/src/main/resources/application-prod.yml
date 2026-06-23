@@ -1,0 +1,60 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${SUPABASE_DB_URL}
+    username: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
+  flyway:
+    url: ${SUPABASE_DB_DIRECT_URL}
+    user: ${SUPABASE_DB_USER}
+    password: ${SUPABASE_DB_PASSWORD}
+    locations: classpath:db/migration
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+ethos:
+  supabase:
+    url: ${SUPABASE_URL}
+    anon-key: ${SUPABASE_ANON_KEY}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+    jwt-secret: ${SUPABASE_JWT_SECRET}
+  aws:
+    region: ${AWS_REGION}
+    bucket: ${S3_BUCKET}
+    cloudfront-domain: ${CF_DOMAIN}
+    access-key: ${AWS_ACCESS_KEY_ID}
+    secret-key: ${AWS_SECRET_ACCESS_KEY}
+  ffmpeg:
+    path: ${FFMPEG_PATH:/usr/bin/ffmpeg}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:https://ethos-stream.vercel.app}
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.ethosstream: INFO
+    org.springframework.security: WARN

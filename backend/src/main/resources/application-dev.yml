@@ -1,0 +1,63 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  datasource:
+    # Supabase POOLER connection for app runtime (port 6543, PgBouncer)
+    url: ${SUPABASE_DB_URL:jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:6543/postgres}
+    username: ${SUPABASE_DB_USER:postgres}
+    password: ${SUPABASE_DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      connection-timeout: 30000
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+
+  flyway:
+    # Supabase DIRECT connection for migrations (port 5432, not pooler)
+    url: ${SUPABASE_DB_DIRECT_URL:jdbc:postgresql://db.xxxx.supabase.co:5432/postgres}
+    user: ${SUPABASE_DB_USER:postgres}
+    password: ${SUPABASE_DB_PASSWORD}
+    locations: classpath:db/migration
+    enabled: true
+    baseline-on-migrate: true
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+ethos:
+  supabase:
+    url: ${SUPABASE_URL:https://xxxx.supabase.co}
+    anon-key: ${SUPABASE_ANON_KEY}
+    service-role-key: ${SUPABASE_SERVICE_ROLE_KEY}
+    jwt-secret: ${SUPABASE_JWT_SECRET}
+  aws:
+    region: ${AWS_REGION:us-east-1}
+    bucket: ${S3_BUCKET:ethos-stream-videos}
+    cloudfront-domain: ${CF_DOMAIN:https://xxxx.cloudfront.net}
+    access-key: ${AWS_ACCESS_KEY_ID:}
+    secret-key: ${AWS_SECRET_ACCESS_KEY:}
+  ffmpeg:
+    path: ${FFMPEG_PATH:/usr/bin/ffmpeg}
+  cors:
+    allowed-origins: http://localhost:5173,http://localhost:3000
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.ethosstream: DEBUG
+    org.springframework.security: DEBUG
+    org.flywaydb: DEBUG
+    org.hibernate.SQL: DEBUG
