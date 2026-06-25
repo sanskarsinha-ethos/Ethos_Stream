@@ -8,25 +8,24 @@ services:
     ports:
       - "${PORT:-8080}:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=prod
-      - ETHOS_SUPABASE_URL=${SUPABASE_URL}
-      - ETHOS_SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
-      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET}
-      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL}
-      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME}
-      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD}
-      - SPRING_FLYWAY_URL=${SPRING_FLYWAY_URL}
-      - SPRING_FLYWAY_USER=${SPRING_FLYWAY_USER}
-      - SPRING_FLYWAY_PASSWORD=${SPRING_FLYWAY_PASSWORD}
-      - ETHOS_AWS_REGION=${AWS_REGION}
-      - ETHOS_AWS_BUCKET=${AWS_BUCKET}
-      - ETHOS_AWS_CLOUDFRONT_DOMAIN=${AWS_CLOUDFRONT_DOMAIN}
-      - ETHOS_AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID}
-      - ETHOS_AWS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY}
-      - SPRING_REDIS_HOST=${SPRING_REDIS_HOST:-redis}
-      - SPRING_REDIS_PORT=${SPRING_REDIS_PORT:-6379}
+      - SPRING_PROFILES_ACTIVE=dev
+      - ETHOS_SUPABASE_URL=${SUPABASE_URL:-http://localhost:54321}
+      - ETHOS_SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY:-dummy_key}
+      - SUPABASE_JWT_SECRET=${SUPABASE_JWT_SECRET:-dummy_jwt_secret_which_is_at_least_32_characters_long}
+      - SPRING_DATASOURCE_URL=${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/ethos}
+      - SPRING_DATASOURCE_USERNAME=${SPRING_DATASOURCE_USERNAME:-postgres}
+      - SPRING_DATASOURCE_PASSWORD=${SPRING_DATASOURCE_PASSWORD:-postgres}
+      - SPRING_FLYWAY_ENABLED=${SPRING_FLYWAY_ENABLED:-true}
+      - ETHOS_AWS_REGION=${AWS_REGION:-us-east-1}
+      - ETHOS_AWS_BUCKET=${AWS_BUCKET:-dummy-bucket}
+      - ETHOS_AWS_CLOUDFRONT_DOMAIN=${AWS_CLOUDFRONT_DOMAIN:-dummy.cloudfront.net}
+      - ETHOS_AWS_ACCESS_KEY=${AWS_ACCESS_KEY_ID:-dummy}
+      - ETHOS_AWS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY:-dummy}
+      - REDIS_HOST=${REDIS_HOST:-redis}
+      - REDIS_PORT=${REDIS_PORT:-6379}
     depends_on:
       - redis
+      - postgres
     restart: unless-stopped
     volumes:
       - video-transcode-tmp:/tmp/ethos-transcode
@@ -40,6 +39,19 @@ services:
     restart: unless-stopped
     command: redis-server --appendonly yes
 
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=ethos
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
 volumes:
   redis-data:
+  postgres-data:
   video-transcode-tmp:

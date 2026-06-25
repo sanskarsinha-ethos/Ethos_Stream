@@ -35,12 +35,12 @@ public class WatchHistory {
 
     @Column(name = "position_seconds")
     @Builder.Default
-    private Double positionSeconds = 0.0;
+    private Integer positionSeconds = 0;
 
-    @Column(name = "is_completed")
+    @Column(name = "completed")
     @Builder.Default
     private Boolean isCompleted = false;
 
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+    @Column(name = "watched_at")
+    private OffsetDateTime watchedAt;
 }

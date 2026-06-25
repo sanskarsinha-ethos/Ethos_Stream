@@ -16,8 +16,8 @@ public interface WatchHistoryRepository extends JpaRepository<WatchHistory, UUID
 
     Optional<WatchHistory> findByProfileIdAndVideoId(UUID profileId, UUID videoId);
 
-    Page<WatchHistory> findByProfileIdOrderByUpdatedAtDesc(UUID profileId, Pageable pageable);
+    Page<WatchHistory> findByProfileIdOrderByWatchedAtDesc(UUID profileId, Pageable pageable);
 
-    @Query("SELECT wh.videoId FROM WatchHistory wh WHERE wh.profileId = :profileId ORDER BY wh.updatedAt DESC")
+    @Query("SELECT wh.videoId FROM WatchHistory wh WHERE wh.profileId = :profileId ORDER BY wh.watchedAt DESC")
     List<UUID> findRecentVideoIdsByProfileId(@Param("profileId") UUID profileId, Pageable pageable);
 }

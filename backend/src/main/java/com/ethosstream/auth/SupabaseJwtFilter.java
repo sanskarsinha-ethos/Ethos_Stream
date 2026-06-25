@@ -5,7 +5,10 @@ import com.ethosstream.user.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.Locator;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.JwkSet;
+import io.jsonwebtoken.security.Jwks;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,9 +22,11 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.client.RestTemplate;
+import jakarta.annotation.PostConstruct;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.security.Key;
 import java.util.UUID;
 
 @Component
@@ -32,7 +37,31 @@ public class SupabaseJwtFilter extends OncePerRequestFilter {
     @Value("${ethos.supabase.jwt-secret}")
     private String supabaseJwtSecret;
 
+    @Value("${ethos.supabase.url}")
+    private String supabaseUrl;
+
     private final UserRepository userRepository;
+
+    private JwkSet jwkSet;
+    private Key symmetricKey;
+
+    @PostConstruct
+    public void init() {
+        byte[] keyBytes = java.util.Base64.getDecoder().decode(supabaseJwtSecret);
+        this.symmetricKey = Keys.hmacShaKeyFor(keyBytes);
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String jwksUrl = supabaseUrl + "/auth/v1/.well-known/jwks.json";
+            String jwksJson = restTemplate.getForObject(jwksUrl, String.class);
+            if (jwksJson != null && !jwksJson.isEmpty()) {
+                this.jwkSet = Jwks.setParser().build().parse(jwksJson);
+                log.info("Successfully fetched and configured Supabase JWKS.");
+            }
+        } catch (Exception e) {
+            log.warn("Failed to fetch Supabase JWKS from {}. ES256 tokens might not verify correctly: {}", supabaseUrl, e.getMessage());
+        }
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -50,12 +79,24 @@ public class SupabaseJwtFilter extends OncePerRequestFilter {
 
         try {
             Claims claims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(supabaseJwtSecret.getBytes(StandardCharsets.UTF_8)))
+                    .keyLocator(header -> {
+                        if (jwkSet != null && header instanceof io.jsonwebtoken.JwsHeader) {
+                            String kid = ((io.jsonwebtoken.JwsHeader) header).getKeyId();
+                            if (kid != null) {
+                                for (io.jsonwebtoken.security.Jwk<?> jwk : jwkSet.getKeys()) {
+                                    if (kid.equals(jwk.getId())) {
+                                        return jwk.toKey();
+                                    }
+                                }
+                            }
+                        }
+                        return symmetricKey;
+                    })
                     .build()
                     .parseSignedClaims(token)
                     .getPayload();
 
-            String userId = claims.getSubject(); // Supabase user UUID
+            String userId = claims.getSubject();
 
             if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 User user = userRepository.findById(UUID.fromString(userId))
@@ -69,13 +110,17 @@ public class SupabaseJwtFilter extends OncePerRequestFilter {
                 log.debug("Authenticated user {} via Supabase JWT", userId);
             }
 
+        } catch (UsernameNotFoundException e) {
+            log.warn("User from JWT not found in database: {}", e.getMessage());
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+            return;
         } catch (JwtException e) {
             log.warn("Invalid Supabase JWT: {}", e.getMessage());
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid or expired token");
             return;
-        } catch (UsernameNotFoundException e) {
-            log.warn("User from JWT not found in database: {}", e.getMessage());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found");
+        } catch (Exception e) {
+            log.error("Unexpected error in SupabaseJwtFilter", e);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal server error");
             return;
         }
 

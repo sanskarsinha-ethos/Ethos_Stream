@@ -22,12 +22,14 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            .cors(org.springframework.security.config.Customizer.withDefaults())
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
                 // Public endpoints
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/genres/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos/featured").permitAll()
@@ -36,6 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/ws/**").permitAll()
                 // Health check
                 .requestMatchers("/actuator/**").permitAll()
+                .requestMatchers("/error").permitAll()
                 // Everything else requires authentication
                 .anyRequest().authenticated()
             )

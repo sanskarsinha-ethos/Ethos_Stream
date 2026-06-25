@@ -35,7 +35,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
     @Override
     @Transactional
-    public void updateWatchHistory(UUID profileId, UUID videoId, Double positionSeconds, Boolean isCompleted) {
+    public void updateWatchHistory(UUID profileId, UUID videoId, Integer positionSeconds, Boolean isCompleted) {
         WatchHistory history = watchHistoryRepository.findByProfileIdAndVideoId(profileId, videoId)
                 .orElseGet(() -> WatchHistory.builder()
                         .profileId(profileId)
@@ -46,14 +46,14 @@ public class RecommendationServiceImpl implements RecommendationService {
         if (isCompleted != null) {
             history.setIsCompleted(isCompleted);
         }
-        history.setUpdatedAt(OffsetDateTime.now());
+        history.setWatchedAt(OffsetDateTime.now());
 
         watchHistoryRepository.save(history);
     }
 
     @Override
     public Page<VideoDTO> getWatchHistory(UUID profileId, Pageable pageable) {
-        Page<WatchHistory> historyPage = watchHistoryRepository.findByProfileIdOrderByUpdatedAtDesc(profileId, pageable);
+        Page<WatchHistory> historyPage = watchHistoryRepository.findByProfileIdOrderByWatchedAtDesc(profileId, pageable);
 
         List<VideoDTO> videos = historyPage.getContent().stream()
                 .map(h -> contentRepository.findById(h.getVideoId()).orElse(null))

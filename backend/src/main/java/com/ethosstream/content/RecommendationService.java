@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface RecommendationService {
 
-    void updateWatchHistory(UUID profileId, UUID videoId, Double positionSeconds, Boolean isCompleted);
+    void updateWatchHistory(UUID profileId, UUID videoId, Integer positionSeconds, Boolean isCompleted);
 
     Page<VideoDTO> getWatchHistory(UUID profileId, Pageable pageable);
 

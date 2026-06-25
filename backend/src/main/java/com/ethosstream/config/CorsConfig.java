@@ -20,10 +20,9 @@ public class CorsConfig {
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
 
-        // Parse comma-separated origins
-        Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .forEach(config::addAllowedOrigin);
+        // Parse comma-separated origins (if any specific ones are needed)
+        // But default to allowing all patterns for development
+        config.addAllowedOriginPattern("*");
 
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

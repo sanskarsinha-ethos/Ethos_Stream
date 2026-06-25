@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "my_list", schema = "public")
+@Table(name = "watchlist", schema = "public")
 @Data
 @Builder
 @NoArgsConstructor

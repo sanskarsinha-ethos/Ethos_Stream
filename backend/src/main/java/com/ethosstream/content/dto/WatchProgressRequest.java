@@ -13,6 +13,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class WatchProgressRequest {
 
-    private Double positionSeconds;
+    private Integer positionSeconds;
     private Boolean isCompleted;
 }
