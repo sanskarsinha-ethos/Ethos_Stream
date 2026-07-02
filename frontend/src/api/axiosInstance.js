@@ -17,9 +17,19 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response Interceptor: Handle 401 and refresh session
+// Response Interceptor: Handle 401 and refresh session, and unwrap ApiResponse
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Unwrap ApiResponse: { success, data, message }
+    if (response.data && typeof response.data === 'object' && 'success' in response.data) {
+      if (response.data.success) {
+        response.data = response.data.data;
+      } else {
+        return Promise.reject(new Error(response.data.message || 'API request failed'));
+      }
+    }
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
