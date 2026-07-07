@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Circle, Globe, Code2, Eye, EyeOff, Tv, Users, Sliders } from 'lucide-react';
+import { Circle, Globe, Eye, EyeOff, Tv, Users } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
+  const [isLoginMode, setIsLoginMode] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -29,24 +30,40 @@ export default function App() {
       setFeedback({ type: 'error', msg: 'Security Requirement: Password must be 8+ chars.' });
       return;
     }
+    
     setIsSubmitting(true);
+    
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email: sanitizedEmail,
-        password: password,
-        options: {
-          data: {
-            first_name: sanitizedFirstName,
-            last_name: sanitizedLastName,
-            display_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
+      if (isLoginMode) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: sanitizedEmail,
+          password: password,
+        });
+        
+        if (error) {
+          setFeedback({ type: 'error', msg: `Ingress Core Error: ${error.message} (${error.status || 400})` });
+          return;
+        }
+        setFeedback({ type: 'success', msg: 'Authentication successful! Initializing space...' });
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: sanitizedEmail,
+          password: password,
+          options: {
+            data: {
+              first_name: sanitizedFirstName,
+              last_name: sanitizedLastName,
+              display_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
+            },
           },
-        },
-      });
-      if (error) {
-        setFeedback({ type: 'error', msg: `Ingress Core Error: ${error.message} (${error.status || 400})` });
-        return;
+        });
+        
+        if (error) {
+          setFeedback({ type: 'error', msg: `Ingress Core Error: ${error.message} (${error.status || 400})` });
+          return;
+        }
+        setFeedback({ type: 'success', msg: 'Streaming profile created! Verify credentials to launch studio.' });
       }
-      setFeedback({ type: 'success', msg: 'Streaming profile created! Verify credentials to launch studio.' });
     } catch (err) {
       setFeedback({ type: 'error', msg: 'System Error: Pipeline compilation error.' });
     } finally {
@@ -123,7 +140,9 @@ export default function App() {
           transition={{ duration: 0.8 }}
         >
           <div className="space-y-2">
-            <h2 className="text-3xl font-medium tracking-tight">Create Viewer Account</h2>
+            <h2 className="text-3xl font-medium tracking-tight">
+              {isLoginMode ? 'Welcome Back' : 'Create Viewer Account'}
+            </h2>
             <p className="text-white/40 text-sm">
               Input your credentials to sync high-bitrate video pipelines.
             </p>
@@ -152,22 +171,24 @@ export default function App() {
           )}
 
           <form onSubmit={handleSignUpSubmission} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputGroup
-                label="First Name"
-                placeholder="Alex"
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-              />
-              <InputGroup
-                label="Last Name"
-                placeholder="Vane"
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-              />
-            </div>
+            {!isLoginMode && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputGroup
+                  label="First Name"
+                  placeholder="Alex"
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+                <InputGroup
+                  label="Last Name"
+                  placeholder="Vane"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                />
+              </div>
+            )}
 
             <InputGroup
               label="Email Address"
@@ -202,14 +223,24 @@ export default function App() {
               disabled={isSubmitting}
               className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 cursor-pointer"
             >
-              {isSubmitting ? 'Provisioning Party Environment...' : 'Initialize Profile'}
+              {isSubmitting 
+                ? (isLoginMode ? 'Authenticating...' : 'Provisioning Party Environment...') 
+                : (isLoginMode ? 'Sign In' : 'Initialize Profile')}
             </button>
           </form>
 
           <p className="text-center text-sm text-white/40">
-            Already on the theater grid?{' '}
-            <a href="#login" className="text-white hover:underline font-medium">
-              Log in to Space
+            {isLoginMode ? 'New to the theater grid? ' : 'Already on the theater grid? '}
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setIsLoginMode(!isLoginMode);
+                setFeedback({ type: null, msg: '' }); // Clear any residual errors on toggle
+              }} 
+              className="text-white hover:underline font-medium"
+            >
+              {isLoginMode ? 'Create an account' : 'Log in to Space'}
             </a>
           </p>
         </motion.div>
