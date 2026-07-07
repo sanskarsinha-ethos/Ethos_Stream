@@ -1,0 +1,25 @@
+FROM maven:3.9-eclipse-temurin-21-alpine AS build
+
+WORKDIR /app
+
+# Download dependencies
+COPY backend/pom.xml .
+RUN mvn dependency:go-offline
+
+# Copy source and build
+COPY backend/src src
+RUN mvn package -DskipTests
+
+# Stage 2: Run
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Install FFmpeg for HLS transcoding
+RUN apk add --no-cache ffmpeg
+
+COPY --from=build /app/target/ethos-stream-1.0.0.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

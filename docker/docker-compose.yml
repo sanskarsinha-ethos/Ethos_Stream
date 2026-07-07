@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+
+  redis:
+    image: redis:7-alpine
+    container_name: ethos_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: ethos_backend
+    ports:
+      - "8080:8080"
+    env_file:
+      - ../.env
+    environment:
+      REDIS_HOST: redis
+      SPRING_PROFILES_ACTIVE: dev
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.frontend
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_WS_URL: ${VITE_WS_URL}
+    container_name: ethos_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: on-failure
+
+volumes:
+  redis_data:
