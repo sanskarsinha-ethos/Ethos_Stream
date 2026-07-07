@@ -15,7 +15,12 @@ export default function App() {
   const handleSignUpSubmission = async (e: React.FormEvent) => {
     e.preventDefault();
     setFeedback({ type: null, msg: '' });
+    
+    // Rigorous payload sanitization
+    const sanitizedFirstName = firstName.trim();
+    const sanitizedLastName = lastName.trim();
     const sanitizedEmail = email.trim();
+    
     if (!/^\S+@\S+\.\S+$/.test(sanitizedEmail)) {
       setFeedback({ type: 'error', msg: 'Format Error: Invalid email pattern.' });
       return;
@@ -31,9 +36,9 @@ export default function App() {
         password: password,
         options: {
           data: {
-            first_name: firstName.trim(),
-            last_name: lastName.trim(),
-            display_name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+            first_name: sanitizedFirstName,
+            last_name: sanitizedLastName,
+            display_name: `${sanitizedFirstName} ${sanitizedLastName}`.trim(),
           },
         },
       });
@@ -103,9 +108,8 @@ export default function App() {
             className="space-y-3"
             variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
           >
-            <StepItem active icon={<Tv className="w-4 h-4" />} number={1} text="Claim streaming keys" />
+            <StepItem active icon={<Tv className="w-4 h-4" />} number={1} text="Stream videos" />
             <StepItem icon={<Users className="w-4 h-4" />} number={2} text="Initialize 4-player party studio" />
-            <StepItem icon={<Sliders className="w-4 h-4" />} number={3} text="Fine-tune UI theater controls" />
           </motion.div>
         </motion.div>
       </section>
@@ -125,9 +129,8 @@ export default function App() {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <SocialButton icon={<Globe className="w-4 h-4" />} label="Google" />
-            <SocialButton icon={<Code2 className="w-4 h-4" />} label="GitHub" />
           </div>
 
           <div className="relative flex py-2 items-center">
