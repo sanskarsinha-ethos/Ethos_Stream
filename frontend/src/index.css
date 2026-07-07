@@ -1,9 +1,39 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ============================================================
+   ETHOS STREAM — Global Stylesheet
+   Tailwind CSS v4 — CSS-first configuration
+   All design tokens defined here via @theme.
+   tailwind.config.js is no longer used.
+   ============================================================ */
 
+@import "tailwindcss";
+
+/* ── Design Tokens ─────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-ethos-bg:        #0A0F1E;
+  --color-ethos-surface:   #151C2C;
+  --color-ethos-elevated:  #1F2937;
+  --color-ethos-border:    #374151;
+  --color-ethos-teal:      #00E5CC;
+  --color-ethos-teal-dim:  rgba(0, 229, 204, 0.1);
+  --color-ethos-amber:     #F59E0B;
+  --color-ethos-amber-dim: rgba(245, 158, 11, 0.1);
+  --color-ethos-white:     #FFFFFF;
+  --color-ethos-muted:     #9CA3AF;
+  --color-ethos-danger:    #EF4444;
+  --color-ethos-success:   #10B981;
+
+  /* Font Families */
+  --font-family-inter: 'Inter', sans-serif;
+  --font-family-space: 'Space Grotesk', sans-serif;
+  --font-family-mono:  'JetBrains Mono', monospace;
+}
+
+/* ── Base Layer ────────────────────────────────────────────── */
 @layer base {
   body {
-    @apply bg-ethos-bg text-ethos-white font-inter;
+    background-color: var(--color-ethos-bg);
+    color: var(--color-ethos-white);
+    font-family: var(--font-family-inter);
   }
 }
