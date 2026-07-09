@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Circle, Globe, Eye, EyeOff, Tv, Users } from 'lucide-react';
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoginMode, setIsLoginMode] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -42,9 +43,12 @@ export default function App() {
         
         if (error) {
           setFeedback({ type: 'error', msg: `Ingress Core Error: ${error.message} (${error.status || 400})` });
+          setIsSubmitting(false);
           return;
         }
+        
         setFeedback({ type: 'success', msg: 'Authentication successful! Initializing space...' });
+        setTimeout(() => setIsAuthenticated(true), 1200);
       } else {
         const { error } = await supabase.auth.signUp({
           email: sanitizedEmail,
@@ -60,17 +64,25 @@ export default function App() {
         
         if (error) {
           setFeedback({ type: 'error', msg: `Ingress Core Error: ${error.message} (${error.status || 400})` });
+          setIsSubmitting(false);
           return;
         }
-        setFeedback({ type: 'success', msg: 'Streaming profile created! Verify credentials to launch studio.' });
+        
+        setFeedback({ type: 'success', msg: 'Authentication successful! Initializing space...' });
+        setTimeout(() => setIsAuthenticated(true), 1200);
       }
     } catch (err) {
       setFeedback({ type: 'error', msg: 'System Error: Pipeline compilation error.' });
-    } finally {
       setIsSubmitting(false);
     }
   };
 
+  // If authenticated, render the dashboard / profile space
+  if (isAuthenticated) {
+    return <ProfileSelectionScreen />;
+  }
+
+  // Otherwise, render the ingress gateway
   return (
     <main className="flex min-h-screen w-full bg-black selection:bg-white/30 p-2 transition-all duration-500 lg:h-screen lg:overflow-hidden lg:p-4">
 
@@ -135,9 +147,10 @@ export default function App() {
       <section className="flex-1 flex flex-col items-center justify-center py-12 lg:py-6 px-4 sm:px-12 lg:px-16 xl:px-24 overflow-y-auto lg:overflow-hidden">
         <motion.div
           className="w-full max-w-xl space-y-8 lg:space-y-6 sm:space-y-10"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.8 }}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.6 }}
         >
           <div className="space-y-2">
             <h2 className="text-3xl font-medium tracking-tight">
@@ -158,37 +171,49 @@ export default function App() {
             <div className="flex-grow border-t border-white/10" />
           </div>
 
-          {feedback.msg && (
-            <div
-              className={`p-4 rounded-xl text-sm ${
-                feedback.type === 'error'
-                  ? 'bg-red-500/10 text-red-400 border border-red-500/20'
-                  : 'bg-green-500/10 text-green-400 border border-green-500/20'
-              }`}
-            >
-              {feedback.msg}
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {feedback.msg && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`p-4 rounded-xl text-sm ${
+                  feedback.type === 'error'
+                    ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                    : 'bg-green-500/10 text-green-400 border border-green-500/20'
+                }`}
+              >
+                {feedback.msg}
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <form onSubmit={handleSignUpSubmission} className="space-y-4">
-            {!isLoginMode && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InputGroup
-                  label="First Name"
-                  placeholder="Alex"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                />
-                <InputGroup
-                  label="Last Name"
-                  placeholder="Vane"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-            )}
+            <AnimatePresence mode="popLayout">
+              {!isLoginMode && (
+                <motion.div 
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-4 overflow-hidden"
+                >
+                  <InputGroup
+                    label="First Name"
+                    placeholder="Alex"
+                    type="text"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                  <InputGroup
+                    label="Last Name"
+                    placeholder="Vane"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <InputGroup
               label="Email Address"
@@ -221,7 +246,7 @@ export default function App() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 cursor-pointer"
+              className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 cursor-pointer flex justify-center items-center"
             >
               {isSubmitting 
                 ? (isLoginMode ? 'Authenticating...' : 'Provisioning Party Environment...') 
@@ -236,7 +261,7 @@ export default function App() {
               onClick={(e) => {
                 e.preventDefault();
                 setIsLoginMode(!isLoginMode);
-                setFeedback({ type: null, msg: '' }); // Clear any residual errors on toggle
+                setFeedback({ type: null, msg: '' }); 
               }} 
               className="text-white hover:underline font-medium"
             >
@@ -248,6 +273,69 @@ export default function App() {
     </main>
   );
 }
+
+// ── Profile Selection Screen (Dashboard) ──────────────────────
+
+function ProfileSelectionScreen() {
+  const profiles = [
+    { name: 'Host', icon: <Tv className="w-10 h-10" /> },
+    { name: 'Player 2', icon: <Users className="w-10 h-10" /> },
+    { name: 'Player 3', icon: <Users className="w-10 h-10" /> },
+    { name: 'Player 4', icon: <Users className="w-10 h-10" /> },
+  ];
+
+  return (
+    <main className="flex min-h-screen w-full bg-black text-white antialiased flex-col items-center justify-center relative p-6">
+      <motion.div 
+        className="flex flex-col items-center w-full max-w-4xl space-y-16"
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        {/* Header */}
+        <div className="space-y-3 text-center">
+          <h1 className="text-4xl font-medium tracking-tight">Who is watching?</h1>
+          <p className="text-white/40 text-sm">
+            Select your streaming key space to access your 4-player party studio.
+          </p>
+        </div>
+
+        {/* Interactive Profiles Grid */}
+        <div className="flex flex-wrap justify-center gap-6 sm:gap-10 w-full">
+          {profiles.map((profile, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05 }}
+              className="flex flex-col items-center gap-4 cursor-pointer group"
+            >
+              <div className="w-32 h-32 sm:w-40 sm:h-40 bg-[#1A1A1A] border border-white/5 rounded-2xl flex items-center justify-center shadow-lg group-hover:border-white/20 transition-all duration-300 group-hover:shadow-white/5 group-hover:shadow-xl">
+                <div className="text-white/40 group-hover:text-white transition-colors duration-300">
+                  {profile.icon}
+                </div>
+              </div>
+              <span className="text-white/60 font-medium text-sm tracking-wide group-hover:text-white transition-colors duration-300">
+                {profile.name}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* Structural Management Action CTA */}
+      <motion.div 
+        className="absolute bottom-12"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+      >
+        <button className="bg-black border border-white/10 text-white/60 text-sm py-2 px-6 rounded-xl hover:text-white hover:bg-white/5 transition-all cursor-pointer">
+          Manage Profiles
+        </button>
+      </motion.div>
+    </main>
+  );
+}
+
 
 // ── Sub-components ────────────────────────────────────────────
 
