@@ -136,7 +136,7 @@ export default function App() {
                   2
                 </div>
                 <span className="text-sm font-medium tracking-tight truncate">
-                  Initialize 4-player party studio
+                  Create Watch Party
                 </span>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function App() {
                     <label className="text-sm font-medium text-white">First Name</label>
                     <input
                       type="text"
-                      placeholder="Alex"
+                      placeholder="Sanskar"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required={!isLoginMode}
@@ -227,7 +227,7 @@ export default function App() {
                     <label className="text-sm font-medium text-white">Last Name</label>
                     <input
                       type="text"
-                      placeholder="Vane"
+                      placeholder="Sinha"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required={!isLoginMode}
@@ -279,7 +279,7 @@ export default function App() {
               disabled={loading}
               className="w-full h-14 bg-white text-black font-semibold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-50 mt-4 cursor-pointer"
             >
-              {loading ? 'Please wait…' : isLoginMode ? 'Sign In' : 'Initialize Profile'}
+              {loading ? 'Please wait…' : isLoginMode ? 'Sign In' : 'Create Account'}
             </button>
           </form>
 
