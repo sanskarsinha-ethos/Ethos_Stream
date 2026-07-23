@@ -9,7 +9,9 @@ import Navbar from './components/layout/Navbar';
 import AuthGuard from './components/layout/AuthGuard';
 
 // Pages
-import AuthPage from './App.tsx';
+import LandingPage from './pages/LandingPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import ProfileSelectPage from './pages/ProfileSelectPage';
 import BrowsePage from './pages/BrowsePage';
 import SearchPage from './pages/SearchPage';
@@ -59,9 +61,9 @@ export default function App() {
       
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={session ? <Navigate to="/profiles" replace /> : <AuthPage />} />
-        <Route path="/login" element={session ? <Navigate to="/profiles" replace /> : <AuthPage />} />
-        <Route path="/register" element={session ? <Navigate to="/profiles" replace /> : <AuthPage />} />
+        <Route path="/" element={session ? <Navigate to="/profiles" replace /> : <LandingPage />} />
+        <Route path="/login" element={session ? <Navigate to="/profiles" replace /> : <LoginPage />} />
+        <Route path="/register" element={session ? <Navigate to="/profiles" replace /> : <RegisterPage />} />
 
         {/* Protected Routes - require authentication */}
         <Route element={<AuthGuard />}>
@@ -82,7 +84,7 @@ export default function App() {
         </Route>
 
         {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to={session ? "/browse" : "/"} replace />} />
       </Routes>
     </BrowserRouter>
   );

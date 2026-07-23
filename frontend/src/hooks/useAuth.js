@@ -71,6 +71,7 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    clearSession();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };
